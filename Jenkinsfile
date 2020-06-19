@@ -5,7 +5,7 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Building..'
-		sh 'make'
+		sh 'mvn package'
 		archiveArtifacts artifacts: 'project/target/*.war', fingerprint: true 
             }
         }
