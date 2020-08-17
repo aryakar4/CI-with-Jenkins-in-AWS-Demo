@@ -1,23 +1,61 @@
 pipeline {
-    agent any
-
-    stages {
-        stage('Build') {
-            steps {
-                echo 'Building..'
-		sh 'mvn package'
-		archiveArtifacts artifacts: 'project/target/*.war', fingerprint: true 
-            }
+        agent any
+        environment {
+            registry = "aryakar4/sprint6dockerjenkinsgcloud"
+            registryCredential = 'dockerhubcredentials'
+            dockerImage = ''
+		PROJECT_ID = 'sprint6-devops'
+ 		CLUSTER_NAME = 'sprint6-kubectl-cluster-gcloud'
+ 		LOCATION = 'us-central1-c'
+ 		CREDENTIALS_ID = 'sprint6-k8'
         }
-        stage('Test') {
-            steps {
-                echo 'Testing..'
+		
+	    stages {	
+		   stage('Scm Checkout') {            
+			steps {
+	                  checkout scm
+			}	
+	           }
+	           
+		   stage('Build') { 
+	                steps {
+	                  echo "Cleaning and packaging..."
+	                  sh 'mvn clean package'		
+	                }
+	           }
+		   stage('Test') { 
+			steps {
+		          echo "Testing..."
+			  sh 'mvn test'
+			}
+		   }
+		   stage('Build Docker Image') { 
+			steps {
+	                   script {
+	                      dockerImage = docker.build registry + ":$BUILD_NUMBER"
+	                   }
+	                }
+		   }
+            stage('Deploy Image') {
+                steps{
+                    script {
+                    docker.withRegistry( '', registryCredential ) {
+                        dockerImage.push()
+                    }
+                    }
+                }
             }
-        }
-        stage('Deploy') {
-            steps {
-                echo 'Deploying....'
-            }
-        }
-    }
-}
+	           stage('Deploy to GKE') {
+ 			steps{
+ 				echo "Deployment started"
+				sh 'ls -ltr'
+				sh 'pwd'
+				sh "sed -i 's/tagversion/${env.BUILD_ID}/g' deployment.yaml"
+				step([$class: 'KubernetesEngineBuilder', projectId: env.PROJECT_ID,
+				      clusterName: env.CLUSTER_NAME, location: env.LOCATION, manifestPattern: 'deployment.yaml',
+				      credentialsId: env.CREDENTIALS_ID, verifyDeployments: true])
+				echo "Deployment Finished"
+ 	            }
+	          }
+	    }
+	}
