@@ -1,7 +1,7 @@
 pipeline {
         agent any
         environment {
-            registry = "aryakar4/sprint6dockerjenkinsgcloud"
+            registry = "aryakar/sprint6dockerjenkinsgcloud"
             registryCredential = 'dockerhubcredential'
             dockerImage = ''
 		PROJECT_ID = 'sprint6-devops'
