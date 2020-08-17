@@ -2,7 +2,7 @@ pipeline {
         agent any
         environment {
             registry = "aryakar4/sprint6dockerjenkinsgcloud"
-            registryCredential = 'dockerhubcredentials'
+            registryCredential = 'dockerhubcredential'
             dockerImage = ''
 		PROJECT_ID = 'sprint6-devops'
  		CLUSTER_NAME = 'sprint6-kubectl-cluster-gcloud'
